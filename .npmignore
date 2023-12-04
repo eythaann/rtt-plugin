@@ -1,2 +1,8 @@
 /src
+
+# node
 tsconfig.json
+package-lock.json
+
+# git
+.gitignore
