@@ -11,7 +11,7 @@ export function compile() {
   const program = ts.createProgram(parsedConfig.fileNames, { ...parsedConfig.options, ...rt_options });
 
   const RTT = new ReadableTypesTester(program, {
-    includedRegexs: [/.*(\.spec-types\.ts)$/],
+    includedRegexs: [/.*(\.(spec|test)-types\.ts)$/],
   });
 
   const exitCode = RTT.runTests();
