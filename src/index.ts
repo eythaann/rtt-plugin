@@ -53,7 +53,7 @@ function init(modules: { typescript: typeof import('typescript/lib/tsserverlibra
         ts.forEachChild(node, visit);
       });
 
-      return diagnostics;
+      return ts.sortAndDeduplicateDiagnostics(diagnostics) as unknown as ts.Diagnostic[];
     };
 
     return languageService;
