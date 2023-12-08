@@ -1,8 +1,8 @@
 #!/usr/bin/env node
 import ts from 'typescript';
-import { ReadableTypesTester } from './utils';
 import path from 'path';
 import fs from 'fs';
+import { ReadableTypesTester } from './Tester/index';
 
 const rt_options: ts.CompilerOptions = {
   noEmit: true,
@@ -38,14 +38,9 @@ const getConfig = () => {
 
 const RTT_CONFIG = getConfig();
 const RTT = new ReadableTypesTester(program, {
+  verbose: process.argv.includes('--verbose'),
   include: RTT_CONFIG.include.map((pattern: string) => RegExp(pattern)),
   exclude: RTT_CONFIG.exclude.map((pattern: string) => RegExp(pattern)),
 });
 
-const exitCode = RTT.runTests();
-
-if (process.argv.includes('--verbose')) {
-  console.log('Used configuration:', RTT.config, '\n');
-}
-
-process.exit(exitCode);
+process.exit(RTT.runTests());
