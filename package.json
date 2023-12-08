@@ -1,13 +1,13 @@
 {
-  "name": "my-plugin",
+  "name": "rtt-plugin",
   "license": "MIT",
-  "main": "./dist",
+  "main": "./dist/LaguageServicePlugin.js",
   "scripts": {
     "build": "tsc -p .",
     "dev": "tsc --watch"
   },
   "bin": {
-    "rtt": "./rtt.js"
+    "rtft": "./dist/run-tests.js"
   },
   "dependencies": {
     "chalk": "^4"
