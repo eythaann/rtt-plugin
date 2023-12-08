@@ -10,6 +10,7 @@
     "rtft": "./dist/run-tests.js"
   },
   "dependencies": {
-    "chalk": "^4"
+    "chalk": "^4",
+    "typescript": "^4.9"
   }
 }

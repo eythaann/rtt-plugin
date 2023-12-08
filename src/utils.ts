@@ -11,8 +11,8 @@ export const getProxy = <T extends Record<string, any>>(obj: T): T => {
 };
 
 interface Config {
-  includedRegexs: RegExp[];
-  excludedRegexs: RegExp[];
+  include: RegExp[];
+  exclude: RegExp[];
 }
 
 const Logger = {
@@ -52,7 +52,7 @@ export class ReadableTypesTester {
   totalFail = 0;
   totalPass = 0;
 
-  constructor(private readonly program: ts.Program, private readonly config: Config) {}
+  constructor(private readonly program: ts.Program, public readonly config: Config) {}
 
   printDetails() {
     Logger.log()
@@ -112,8 +112,8 @@ export class ReadableTypesTester {
     const sourceFiles = this.program.getSourceFiles();
     sourceFiles.forEach((sourceFile) => {
       if (
-        !this.config.includedRegexs.some((rgx) => rgx.test(sourceFile.fileName))
-        || this.config.excludedRegexs.some((rgx) => rgx.test(sourceFile.fileName))
+        !this.config.include.some((rgx) => rgx.test(sourceFile.fileName))
+        || this.config.exclude.some((rgx) => rgx.test(sourceFile.fileName))
       ) {
         return;
       }
