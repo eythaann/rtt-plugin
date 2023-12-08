@@ -12,6 +12,7 @@ export const getProxy = <T extends Record<string, any>>(obj: T): T => {
 
 interface Config {
   includedRegexs: RegExp[];
+  excludedRegexs: RegExp[];
 }
 
 const Logger = {
@@ -110,7 +111,10 @@ export class ReadableTypesTester {
     console.time('Time');
     const sourceFiles = this.program.getSourceFiles();
     sourceFiles.forEach((sourceFile) => {
-      if (!this.config.includedRegexs.some((rgx) => rgx.test(sourceFile.fileName))) {
+      if (
+        !this.config.includedRegexs.some((rgx) => rgx.test(sourceFile.fileName))
+        || this.config.excludedRegexs.some((rgx) => rgx.test(sourceFile.fileName))
+      ) {
         return;
       }
 
