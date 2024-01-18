@@ -53,8 +53,9 @@ export class FileTester {
     if (ts.isPropertyAccessExpression(node.expression)) {
       const leftExpression = node.expression.expression;
       const assertType = typeChecker.getTypeAtLocation(leftExpression);
-      //@ts-ignore
-      recieveTypeString = typeChecker.typeToString(assertType.resolvedTypeArguments[0]);
+      if ((assertType as any)?.resolvedTypeArguments?.[0]) {
+        recieveTypeString = typeChecker.typeToString((assertType as any).resolvedTypeArguments[0]);
+      }
     }
 
     const ExpectedType = node.typeArguments?.[0] ? typeChecker.getTypeFromTypeNode(node.typeArguments[0]) : null;
