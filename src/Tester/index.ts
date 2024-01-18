@@ -1,14 +1,11 @@
 import chalk from 'chalk';
+import { IConfig, RTFT_CONFIG } from '../Config/index';
 import { Logger } from './Logger';
-import { SingleFileTester, TestGroup, TestStatus } from './SingleFileTester';
-
-interface Config {
-  verbose: boolean;
-  include: RegExp[];
-  exclude: RegExp[];
-}
+import { FileTester, TestGroup, TestStatus } from './SingleFileTester';
 
 export class ReadableTypesTester {
+  readonly config: IConfig = RTFT_CONFIG;
+
   totalFiles = 0;
   totalFailFiles = 0;
   totalPassFiles = 0;
@@ -17,7 +14,7 @@ export class ReadableTypesTester {
   totalFail = 0;
   totalPass = 0;
 
-  constructor(private readonly program: ts.Program, public readonly config: Config) {}
+  constructor(private readonly program: ts.Program) {}
 
   printDetails() {
     Logger.log()
@@ -109,6 +106,6 @@ export class ReadableTypesTester {
   }
 
   runIndividualTest(sourceFile: ts.SourceFile): TestGroup[] {
-    return new SingleFileTester(this.program, sourceFile).runTests();
+    return new FileTester(this.program, sourceFile).runTests();
   }
 }

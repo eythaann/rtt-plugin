@@ -36,7 +36,7 @@ export interface TestPass {
 
 export type TestResult = TestFail | TestPass;
 
-export class SingleFileTester {
+export class FileTester {
   testsResults: TestGroup[] = [];
 
   constructor(
