@@ -1,22 +1,27 @@
 export const Logger = {
   recording: false,
   records: [] as any[],
+
   record() {
     this.recording = true;
     return this;
   },
+
   printRecords() {
     this.records.forEach((record) => console.log(...[record].flat()));
     return this;
   },
+
   endRecord() {
     this.recording = false;
     return this;
   },
-  end(label: string) {
+
+  timeEnd(label: string) {
     console.timeEnd(label);
     return this;
   },
+
   log(...v: any[]) {
     console.log(...v);
     if (this.recording) {
@@ -25,3 +30,5 @@ export const Logger = {
     return this;
   },
 };
+
+export const indent = (deep: number) => '  '.repeat(deep);

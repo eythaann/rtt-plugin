@@ -41,7 +41,7 @@ function init(modules: { typescript: typeof import('typescript/lib/tsserverlibra
                 file: sourceFile,
                 start: node.getStart(),
                 length: node.getWidth(),
-                messageText: 'Test is failing: ' + returnType.slice(returnType.indexOf('<') + 1, -1),
+                messageText: 'Test is failing: ' + returnType.slice(returnType.indexOf('<') + 2, -2),
                 category: ts.DiagnosticCategory.Error,
                 //@ts-ignore
                 code: 'readable-test-types',

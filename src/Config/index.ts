@@ -22,8 +22,11 @@ const getClientConfigFile = () => {
 };
 
 const getConfig = () => {
+  const lastArgv = process.argv.slice(2).at(-1);
+  const pathToTest = lastArgv && !lastArgv.startsWith('-') ? lastArgv.replaceAll('\\', '/') : null;
+
   const config = {
-    verbose: process.argv.includes('--verbose'),
+    verbose: !!pathToTest || process.argv.includes('--verbose'),
     include: ['.*(\.(spec|test)(-types)?\.ts)$'],
     exclude: ['.*node_modules.*'],
   };
@@ -32,9 +35,9 @@ const getConfig = () => {
 
   const includeByConsole = process.argv.find((arg) => arg.includes('--include='))?.split('=')[1];
 
-  console.log(includeByConsole);
-
-  if (includeByConsole) {
+  if (pathToTest) {
+    config.include = [pathToTest];
+  } else if (includeByConsole) {
     config.include = [includeByConsole];
   } else if (clientConfig?.testing?.include) {
     config.include = clientConfig?.testing?.include;

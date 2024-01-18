@@ -1,6 +1,8 @@
+import chalk from 'chalk';
 import ts from 'typescript';
+import { indent } from './Logger';
 
-export enum TestStatus {
+export enum Status {
   pass = 'pass',
   fail = 'fail',
 }
@@ -10,77 +12,102 @@ export enum Type {
   test = 'test',
 }
 
-export interface TestGroup {
-  type: Type;
-  status: TestStatus;
+export interface TestGroupResult {
+  type: Type.group;
+  status: Status;
   description: string;
   start?: number;
   length?: number;
-  tests: TestResult[];
+  tests: (TestGroupResult | SingleTestResult)[];
 }
 
-export interface TestFail {
+interface TestFail {
   type: Type.test;
-  status: TestStatus.fail;
-  reason: string;
+  status: Status.fail;
+  reason: string[];
   description: string;
   start: number;
   length: number;
 }
 
-export interface TestPass {
+interface TestPass {
   type: Type.test;
-  status: TestStatus.pass;
+  status: Status.pass;
   description: string;
 }
 
-export type TestResult = TestFail | TestPass;
+type SingleTestResult = TestFail | TestPass;
 
 export class FileTester {
-  testsResults: TestGroup[] = [];
+  testsResults: TestGroupResult[] = [];
 
   constructor(
     private readonly program: ts.Program,
     private readonly sourceFile: ts.SourceFile
-  ) {
-    this.visit = this.visit.bind(this);
-    this.visitTest = this.visitTest.bind(this);
-    this.visitAssert = this.visitAssert.bind(this);
-  }
+  ) {}
 
-  visitAssert(node: ts.CallExpression) {
+  getRecieveAndExpected(node: ts.CallExpression) {
     const typeChecker = this.program.getTypeChecker();
+    let recieveTypeString: string | null = null;
 
-    const signature = typeChecker.getResolvedSignature(node);
-
-    if (!signature) {
-      return;
+    if (ts.isPropertyAccessExpression(node.expression)) {
+      const leftExpression = node.expression.expression;
+      const assertType = typeChecker.getTypeAtLocation(leftExpression);
+      //@ts-ignore
+      recieveTypeString = typeChecker.typeToString(assertType.resolvedTypeArguments[0]);
     }
 
-    const returnType = typeChecker.typeToString(typeChecker.getReturnTypeOfSignature(signature));
+    const ExpectedType = node.typeArguments?.[0] ? typeChecker.getTypeFromTypeNode(node.typeArguments[0]) : null;
 
-    if (returnType.includes('RTT_FAIL')) {
-      return {
-        type: Type.test,
-        status: TestStatus.fail,
+    return {
+      recieve: recieveTypeString || 'Error displaying recieve type, please check it in the code manually.',
+      expected: ExpectedType ? typeChecker.typeToString(ExpectedType) : null,
+    };
+  }
+
+  visitAssert(result: SingleTestResult, node: ts.Node) {
+    if (ts.isCallExpression(node)) {
+      const typeChecker = this.program.getTypeChecker();
+      const signature = typeChecker.getResolvedSignature(node);
+      const returnType = signature ? typeChecker.typeToString(typeChecker.getReturnTypeOfSignature(signature)) : null;
+
+      if (!returnType || !returnType.includes('RTT_FAIL')) {
+        return;
+      }
+
+      const errorMessage = returnType.slice(returnType.indexOf('<') + 2, -2);
+      const simpleExpected = errorMessage.slice(errorMessage.indexOf('`') + 1, -1);
+      const { recieve, expected } = this.getRecieveAndExpected(node);
+
+      Object.assign(result, {
+        status: Status.fail,
         start: node.getStart(),
         length: node.getWidth(),
-        reason: returnType.slice(returnType.indexOf('<') + 1, -1),
-      } as TestFail;
+        reason: [
+          chalk.red('Recieved:',),
+          indent(1) + recieve,
+          chalk.green('Expected:',),
+          indent(1) + (expected || simpleExpected),
+          '',
+          chalk.red('Error: ', errorMessage),
+        ],
+      });
     }
+
+    ts.forEachChild(node, this.visitAssert.bind(this, result));
   }
 
-  visitTest(node: ts.Node) {
-    if (!ts.isCallExpression(node) || !ts.isIdentifier(node.expression) || node.expression.text !== 'testType') {
+  visitTest(group: TestGroupResult, node: ts.Node) {
+    if (!ts.isCallExpression(node) || !ts.isIdentifier(node.expression) || !['testType', 'test'].includes(node.expression.text)) {
       return;
     }
 
-    let testResult = {
+    const testResult: SingleTestResult = {
       type: Type.test,
-      status: TestStatus.pass,
+      status: Status.pass,
       //@ts-ignore
       description: node.arguments[0]?.text || '',
-    } as TestResult;
+    } as SingleTestResult;
 
     const cb = node.arguments[1];
     if (!cb) {
@@ -88,69 +115,67 @@ export class FileTester {
     }
 
     if (ts.isFunctionLike(cb)) {
-      ts.forEachChild(cb.body, (node) => {
-        ts.forEachChild(node, (node) => {
-          if (!ts.isCallExpression(node)) {
-            return;
-          }
-          const result = this.visitAssert(node);
-          if (result && result.status === TestStatus.fail) {
-            testResult = {
-              ...testResult,
-              ...result,
-            };
-          }
-        });
-      });
+      this.visitAssert(testResult, cb.body);
     }
 
     if (ts.isArrayLiteralExpression(cb)) {
       cb.elements.forEach((node) => {
-        if (!ts.isCallExpression(node)) {
-          return;
-        }
-        const result = this.visitAssert(node);
-        if (result && result.status === TestStatus.fail) {
-          testResult = {
-            ...testResult,
-            ...result,
-          };
-        }
+        this.visitAssert(testResult, node);
       });
     }
 
-    if (testResult.status === TestStatus.fail) {
-      this.testsResults.at(-1)!.status = TestStatus.fail;
+    if (ts.isObjectLiteralExpression(cb)) {
+      cb.properties.forEach((node) => {
+        if (!ts.isPropertyAssignment(node) || !ts.isCallExpression(node.initializer)) {
+          return;
+        }
+        this.visitAssert(testResult, node.initializer);
+      });
     }
-    this.testsResults.at(-1)!.tests.push(testResult);
+
+    if (testResult.status === Status.fail) {
+      group.status = Status.fail;
+    }
+    group.tests.push(testResult);
   }
 
-  visit(node: ts.Node) {
-    if (!ts.isCallExpression(node) || !ts.isIdentifier(node.expression) || node.expression.text !== 'describeType') {
+  visitDescribes(parentGroup: TestGroupResult | null, node: ts.Node) {
+    if (!ts.isCallExpression(node) || !ts.isIdentifier(node.expression) || !['describeType', 'describe'].includes(node.expression.text)) {
       return;
     }
-
-    this.testsResults.push({
-      type: Type.group,
-      //@ts-ignore
-      description: node.arguments[0]?.text || '',
-      status: TestStatus.pass,
-      tests: [],
-    });
 
     const cb = node.arguments[1];
     if (!cb || !ts.isFunctionLike(cb)) {
       return;
     }
 
+    const group: TestGroupResult = {
+      type: Type.group,
+      //@ts-ignore
+      description: node.arguments[0]?.text || '',
+      status: Status.pass,
+      tests: [],
+    };
+
     ts.forEachChild(cb.body, (node) => {
-      ts.forEachChild(node, this.visitTest);
+      ts.forEachChild(node, this.visitTest.bind(this, group));
+      ts.forEachChild(node, this.visitDescribes.bind(this, group));
     });
+
+    if (parentGroup) {
+      parentGroup.tests.push(group);
+
+      if (group.status === Status.fail) {
+        parentGroup.status = Status.fail;
+      }
+    } else {
+      this.testsResults.push(group);
+    }
   }
 
-  runTests(): TestGroup[] {
+  runTests(): TestGroupResult[] {
     ts.forEachChild(this.sourceFile, (node) => {
-      ts.forEachChild(node, this.visit);
+      ts.forEachChild(node, this.visitDescribes.bind(this, null));
     });
     return this.testsResults;
   }
