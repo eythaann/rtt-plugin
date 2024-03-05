@@ -116,7 +116,7 @@ export class FileTester {
     }
 
     if (ts.isFunctionLike(cb)) {
-      this.visitAssert(testResult, cb.body);
+      this.visitAssert(testResult, (cb as any).body);
     }
 
     if (ts.isArrayLiteralExpression(cb)) {
@@ -158,7 +158,7 @@ export class FileTester {
       tests: [],
     };
 
-    ts.forEachChild(cb.body, (node) => {
+    ts.forEachChild((cb as any).body, (node) => {
       ts.forEachChild(node, this.visitTest.bind(this, group));
       ts.forEachChild(node, this.visitDescribes.bind(this, group));
     });

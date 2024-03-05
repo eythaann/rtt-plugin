@@ -13,8 +13,8 @@ args:
   process.exit(0);
 }
 
-import ts from 'typescript';
 import { ReadableTypesTester } from './Tester/index';
+import ts from 'typescript';
 
 const rt_options: ts.CompilerOptions = {
   noEmit: true,

@@ -1,3 +1,5 @@
+import ts from 'typescript';
+
 const proxyObj = <T extends Record<string, any>>(obj: T): T => {
   const proxy: T = Object.create(null);
   for (const key of Object.keys(obj) as Array<keyof T>) {
@@ -7,7 +9,7 @@ const proxyObj = <T extends Record<string, any>>(obj: T): T => {
   return proxy;
 };
 
-function init(modules: { typescript: typeof import('typescript/lib/tsserverlibrary.js') }) {
+export function LanguageServicePlugin(modules: { typescript: typeof import('typescript/lib/tsserverlibrary.js') }) {
   const ts = modules.typescript;
 
   function create(info: ts.server.PluginCreateInfo) {
@@ -31,7 +33,7 @@ function init(modules: { typescript: typeof import('typescript/lib/tsserverlibra
       }
 
       const typeChecker = tsLanguageService.getProgram()?.getTypeChecker();
-      ts.forEachChild(sourceFile, function visit(node) {
+      ts.forEachChild(sourceFile, function visit(node): void {
         if (ts.isCallExpression(node)) {
           const signature = typeChecker?.getResolvedSignature(node);
           if (signature) {
@@ -61,5 +63,3 @@ function init(modules: { typescript: typeof import('typescript/lib/tsserverlibra
 
   return { create };
 }
-
-module.exports = init;
