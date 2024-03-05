@@ -1,4 +1,5 @@
 import chalk from 'chalk';
+import ts from 'typescript';
 import { IConfig, RTFT_CONFIG } from '../Config/index';
 import { indent, Logger } from './Logger';
 import { FileTester, TestGroupResult, Status, Type } from './SingleFileTester';

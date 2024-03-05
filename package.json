@@ -11,6 +11,6 @@
   },
   "dependencies": {
     "chalk": "^4",
-    "typescript": "^4.9"
+    "typescript": ">=4.2"
   }
 }
