@@ -2,6 +2,7 @@ import chalk from 'chalk';
 import { IConfig, RTFT_CONFIG } from '../Config/index';
 import { indent, Logger } from './Logger';
 import { FileTester, TestGroupResult, Status, Type } from './SingleFileTester';
+import ts from 'typescript';
 
 export class ReadableTypesTester {
   readonly config: IConfig = RTFT_CONFIG;
@@ -38,6 +39,7 @@ export class ReadableTypesTester {
 
     if (this.config.verbose) {
       Logger.log('Used configuration:', this.config, '\n');
+      Logger.log('Used TS version:', ts.version, '\n');
     }
   }
 

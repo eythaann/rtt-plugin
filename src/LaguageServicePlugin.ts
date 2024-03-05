@@ -1,3 +1,4 @@
+import ts from 'typescript';
 
 const proxyObj = <T extends Record<string, any>>(obj: T): T => {
   const proxy: T = Object.create(null);
