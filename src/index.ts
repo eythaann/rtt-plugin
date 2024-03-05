@@ -1,6 +1,12 @@
+import { LanguageServicePlugin } from './LaguageServicePlugin';
+
+//@ts-ignore
 globalThis.assertType = () => ({
+//@ts-ignore
   not: globalThis.assertType,
+  //@ts-ignore
   awaited: globalThis.assertType,
+  //@ts-ignore
   returned: globalThis.assertType,
   equals() {},
   isSuperTypeOf() {},
@@ -28,5 +34,9 @@ globalThis.assertType = () => ({
     shouldBe() {},
   },
 });
+//@ts-ignore
 globalThis.testType = () => {};
+//@ts-ignore
 globalThis.describeType = () => {};
+
+module.exports = LanguageServicePlugin;

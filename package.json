@@ -1,7 +1,7 @@
 {
   "name": "rtt-plugin",
   "license": "MIT",
-  "main": "./dist/LaguageServicePlugin.js",
+  "main": "./dist/index.js",
   "scripts": {
     "build": "tsc -p .",
     "dev": "tsc --watch"
