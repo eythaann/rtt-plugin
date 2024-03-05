@@ -1,18 +1,18 @@
 {
-  "include": [
-    "./src"
-  ],
-  "exclude": [
-    "node_modules/"
-  ],
   "compilerOptions": {
     "target": "ESNext",
-    "module": "NodeNext",
+    "module": "CommonJS",
     "moduleResolution": "NodeNext",
     "outDir": "./dist",
     "esModuleInterop": true,
     "strict": true,
     "noUncheckedIndexedAccess": true,
     "allowJs": true,
-  }
+  },
+  "include": [
+    "./src"
+  ],
+  "exclude": [
+    "node_modules/"
+  ],
 }
